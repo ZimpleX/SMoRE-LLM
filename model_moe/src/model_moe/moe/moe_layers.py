@@ -12,6 +12,164 @@ from .moe_gates import (
     SMoREDenseGate,
     SMoRESwitchGate,
 )
+import math
+from transformers.activations import ACT2FN
+
+
+class LinearGLUExperts(nn.Module):
+    """
+    Modified from transformers.models.llama.modeling_llama.LlamaMLP
+    """
+
+    __constants__ = [
+        "bias",
+        "in_features",
+        "hidden_features",
+        "out_features",
+        "hidden_act",
+        "num_experts",
+        "size_experts",
+    ]
+
+    def __init__(
+        self,
+        in_features,
+        hidden_features,
+        out_features,
+        hidden_act,
+        num_experts,
+        size_experts=None,
+        bias=True,
+        device=None,
+        dtype=None,
+        layer_index=None,
+    ):
+        factory_kwargs = {"device": device, "dtype": dtype}
+        super().__init__()
+        self.in_features = in_features
+        self.hidden_features = hidden_features
+        self.out_features = out_features
+        self.hidden_act = hidden_act
+        self.num_experts = num_experts
+        self.layer_index = layer_index
+
+        if size_experts is None:
+            # all experts share the same number of hidden neurons
+            assert hidden_features % num_experts == 0
+            size_per_expert = hidden_features // num_experts
+            size_experts = [size_per_expert for _ in range(num_experts)]
+        elif isinstance(size_experts, int):
+            size_experts = [size_experts] * num_experts
+        else:
+            # use specified expert sizes
+            assert (
+                len(size_experts) == num_experts
+                # and sum(size_experts) == hidden_features
+            )
+        self.size_experts = size_experts
+
+        self.act_fn = ACT2FN[hidden_act]
+
+        self.weight__gate = nn.ParameterList()
+        self.weight__up = nn.ParameterList()
+        self.weight__down = nn.ParameterList()
+
+        for i in range(num_experts):
+            # this matrix will be transposed when performing linear forwarding
+            this_expert_weight__gate = nn.Parameter(
+                torch.empty((size_experts[i], in_features), **factory_kwargs)
+            )
+            # this matrix will be transposed when performing linear forwarding
+            this_expert_weight__up = nn.Parameter(
+                torch.empty((size_experts[i], in_features), **factory_kwargs)
+            )
+            # this matrix will be transposed when performing linear forwarding
+            this_expert_weight__down = nn.Parameter(
+                torch.empty((out_features, size_experts[i]), **factory_kwargs)
+                # torch.zeros((out_features, size_experts[i]), **factory_kwargs)
+            )
+            self.weight__gate.append(this_expert_weight__gate)
+            self.weight__up.append(this_expert_weight__up)
+            self.weight__down.append(this_expert_weight__down)
+
+        if bias:
+            self.bias_gate = nn.ParameterList()
+            self.bias_up = nn.ParameterList()
+            self.bias_down = nn.ParameterList()
+
+            for i in range(num_experts):
+                this_expert_bias_gate = nn.Parameter(
+                    torch.empty((size_experts[i],), **factory_kwargs)
+                )
+                this_expert_bias_up = nn.Parameter(
+                    torch.empty((size_experts[i],), **factory_kwargs)
+                )
+                this_expert_bias_down = nn.Parameter(
+                    torch.empty((out_features,), **factory_kwargs)
+                )
+                self.bias_gate.append(this_expert_bias_gate)
+                self.bias_up.append(this_expert_bias_up)
+                self.bias_down.append(this_expert_bias_down)
+        else:
+            self.register_parameter("bias_gate", None)
+            self.register_parameter("bias_up", None)
+            self.register_parameter("bias_down", None)
+
+        self.reset_parameters()
+
+    def reset_parameters(self):
+        for i in range(self.num_experts):
+            nn.init.kaiming_uniform_(self.weight__gate[i], a=math.sqrt(5))
+            nn.init.kaiming_uniform_(self.weight__up[i], a=math.sqrt(5))
+            # nn.init.kaiming_uniform_(self.weight__down[i], a=math.sqrt(5))
+            nn.init.zeros_(self.weight__down[i])
+            if self.bias_gate is not None:
+                fan_in, _ = nn.init._calculate_fan_in_and_fan_out(self.weight__gate[i])
+                bound = 1 / math.sqrt(fan_in)
+                nn.init.uniform_(self.bias_gate[i], -bound, bound)
+            if self.bias_up is not None:
+                fan_in, _ = nn.init._calculate_fan_in_and_fan_out(self.weight__up[i])
+                bound = 1 / math.sqrt(fan_in)
+                nn.init.uniform_(self.bias_up[i], -bound, bound)
+            if self.bias_down is not None:
+                fan_in, _ = nn.init._calculate_fan_in_and_fan_out(self.weight__down[i])
+                bound = 1 / math.sqrt(fan_in)
+                nn.init.zeros_(self.bias_down[i])
+
+    def forward(self, input, i):
+        gate = self.act_fn(
+            F.linear(
+                input,
+                self.weight__gate[i],
+                self.bias_gate[i] if self.bias_gate is not None else None,
+            )
+        )
+        up = F.linear(
+            input,
+            self.weight__up[i],
+            self.bias_up[i] if self.bias_up is not None else None,
+        )
+        down = F.linear(
+            gate * up,
+            self.weight__down[i], 
+            self.bias_down[i] if self.bias_down is not None else None,
+        )
+        return down
+
+    def extra_repr(self):
+        return (
+            "in_features={}, hidden_features={}, out_features={}, hidden_act={},"
+            " num_experts={}, size_experts={}, bias={}".format(
+                self.in_features,
+                self.hidden_features,
+                self.out_features,
+                self.hidden_act,
+                self.num_experts,
+                self.size_experts,
+                self.bias_gate is not None,
+            )
+        )
+
 
 
 @dataclass
@@ -169,3 +327,43 @@ class BaseMoELayer(nn.Module):
     def reset_experts(self):
         self.moe_calculator.reset_experts()
     # fmt: on
+
+
+class LinearGLUMoELayer(BaseMoELayer):
+    def __init__(
+        self,
+        input_size,
+        hidden_size,
+        output_size,
+        hidden_act,
+        num_experts,
+        num_selects,
+        size_experts=None,
+        bias=True,
+        **kwargs,
+    ):
+        # fmt: off
+        super(LinearGLUMoELayer, self).__init__()
+        assert (num_selects <= num_experts)
+        self.input_size = input_size
+        self.hidden_size = hidden_size
+        self.output_size = output_size
+        self.hidden_act = hidden_act
+        self.num_experts = num_experts
+        self.num_selects = num_selects
+        self.size_experts = size_experts
+        self.bias = bias
+
+        experts = LinearGLUExperts(
+            input_size,
+            hidden_size,
+            output_size,
+            hidden_act,
+            num_experts,
+            size_experts=size_experts,
+            bias=bias
+        )
+
+        self._create_gate(**kwargs)
+        self._create_calculator(experts, **kwargs)
+        # fmt: on

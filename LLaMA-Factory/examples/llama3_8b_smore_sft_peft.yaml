@@ -1,0 +1,74 @@
+define: &model_zoo_name "[peft] llama3_8b"
+define: &finetuning_type peft_moe
+define: &moe_arch smore
+define: &datasets arc_c
+define: &max_samples null
+define: &data_template llama3
+
+### model
+model_zoo_name: *model_zoo_name
+
+### method
+stage: sft
+do_train: true
+finetuning_type: *finetuning_type
+
+max_grad_norm: 1
+# moe
+moe_arch: *moe_arch
+moe_num_experts:
+  - 4
+moe_num_active:
+  - 2
+moe_expert_dims:
+  - 16
+moe_gate_dims:
+  - 32
+moe_dim_downproj_x: 32
+moe_gate_act_fn: relu
+moe_gate_type: switch
+moe_gate_arch: mlp
+moe_expert_act_fn: tanh
+moe_target_modules:
+  - up_proj
+  - down_proj
+  - gate_proj
+moe_exclude_modules:
+  - mlp\..*
+moe_init_method: w_final_zero # b_zero | normal
+
+### dataset
+dataset: *datasets
+template: *data_template
+cutoff_len: 2048
+max_samples: *max_samples
+overwrite_cache: true
+preprocessing_num_workers: 16
+
+### output
+trainer_model_zoo_name: *model_zoo_name
+output_dir: "" #saves/llama3-8b/smore/sft
+_output_dir_format:
+  finetuning_type: *finetuning_type
+  moe_arch: *moe_arch
+logging_steps: 1
+save_steps: 500
+plot_loss: true
+overwrite_output_dir: true
+
+### train
+per_device_train_batch_size: 1
+gradient_accumulation_steps: 8
+learning_rate: 1.0e-4
+num_train_epochs: 2.0
+lr_scheduler_type: cosine
+warmup_ratio: 0.1
+bf16: true
+ddp_timeout: 180000000
+
+### eval
+val_size: 0.1
+per_device_eval_batch_size: 1
+eval_strategy: steps
+eval_steps: 50
+compute_accuracy: True

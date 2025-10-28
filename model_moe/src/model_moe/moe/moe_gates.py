@@ -294,7 +294,6 @@ class SMoREGate(SMoREGateCommon):
         # top_k_logits: (batch * seq) x f2 x f1
         top_k_logits = top_logits[..., :self.num_active]
         top_k_indices = top_indices[..., :self.num_active]
-        # TODO(zengh) do not add softmax if there's only 1 active expert??
         top_k_scores = self.softmax(top_k_logits.to(torch.float32)) if self.use_softmax else top_k_logits
         top_k_scores = top_k_scores.to(logits.dtype)
 

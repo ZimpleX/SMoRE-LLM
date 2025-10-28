@@ -1,0 +1,1 @@
+We integrate S'MoRE in the HuggingFace PEFT library. 
