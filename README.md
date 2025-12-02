@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="images/smore_logo_final.png" alt="logo" width="50" height="auto" />
+  <img src="images/smore_logo_final.png" alt="logo" width="75" height="auto" />
   <h1>S'MoRE: Structural Mixture of Residual Experts for Parameter-Efficient LLM Fine-tuning</h1>
   <p>
     <a href="https://neurips.cc/Conferences/2025">
@@ -30,15 +30,15 @@ Contact: `zhqhku@gmail.com`
 
 #### How to make the best S'MoRE?
 
-![Comparison of PEFT adapter architectures: LoRA vs. MoE vs. S'MoRE](images/lora_moe_smore.png)
+<img src="images/lora_moe_smore.png" alt="Comparison of PEFT adapter architectures: LoRA vs. MoE vs. S'MoRE" width="600"/>
 
 #### S'MoRE: layer propagation
 
-![S'MoRE layer propagation](images/smore_layer.png)
+<img src="images/smore_layer.png" alt="S'MoRE layer propagation" width="400"/>
 
 #### S'MoRE: hierarchical routing
 
-![S'MoRE hierarchical routing](images/smore_routing.png)
+<img src="images/smore_routing.png" alt="S'MoRE hierarchical routing" width="500"/>
 
 
 ### Setup
