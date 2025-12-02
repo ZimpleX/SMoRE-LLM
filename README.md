@@ -1,7 +1,44 @@
-## [NeurIPS 2025] S'MoRE: Structural Mixture of Residual Experts for Parameter-Efficient LLM Fine-tuning
+<div align="center">
+  <img src="images/smore_logo_final.png" alt="logo" width="50" height="auto" />
+  <h1>S'MoRE: Structural Mixture of Residual Experts for Parameter-Efficient LLM Fine-tuning</h1>
+  <p>
+    <a href="https://neurips.cc/Conferences/2025">
+      <img src="https://img.shields.io/badge/NeurIPS-2025-68448a?style=flat&logo=neurips" alt="NeurIPS 2025" />
+    </a>
+  </p>
+  <a href="https://arxiv.org/abs/2504.06426">
+      <img src="https://img.shields.io/badge/arXiv-2504.06426-b31b1b.svg" alt="arXiv" />
+    </a>
+  <p>
+    Fine-tuning pre-trained large language models (LLMs) presents a dual challenge of balancing parameter efficiency and model capacity. Existing methods like low-rank adaptations (LoRA) are efficient but lack flexibility, while Mixture-of-Experts (MoE) enhance model capacity at the cost of more & under-utilized parameters. To address these limitations, we propose Structural Mixture of Residual Experts (S’MoRE), a novel framework that seamlessly integrates the efficiency of LoRA with the flexibility of MoE. Conceptually, S’MoRE employs hierarchical low-rank decomposition of expert weights, yielding residuals of varying orders interconnected in a multi-layer structure. By routing input tokens through sub-trees of residuals, S’MoRE emulates the capacity of numerous experts by instantiating and assembling just a few low-rank matrices. We craft the inter-layer propagation of S’MoRE’s residuals as a special type of Graph Neural Network (GNN), and prove that under similar parameter budget, S’MoRE improves structural flexibility of traditional MoE (or Mixture-of-LoRA) by exponential order. Comprehensive theoretical analysis and empirical results demonstrate that S’MoRE achieves superior fine-tuning performance, offering a transformative approach for efficient LLM adaptation. 
+  </p>
+  
+<!-- <p>
+  <a href="https://github.com/ZimpleX/SMoRE-LLM/graphs/contributors">
+    <img src="https://img.shields.io/github/contributors/username/repo" alt="contributors" />
+  </a>
+  <a href="">
+    <img src="https://img.shields.io/github/last-commit/username/repo" alt="last update" />
+  </a>
+</p> -->
+   
+</div>
 
 Contact: `zhqhku@gmail.com`
 
+### Overview
+
+#### How to make the best S'MoRE?
+
+![Comparison of PEFT adapter architectures: LoRA vs. MoE vs. S'MoRE](images/lora_moe_smore.png)
+
+#### S'MoRE: layer propagation
+
+![S'MoRE layer propagation](images/smore_layer.png)
+
+#### S'MoRE: hierarchical routing
+
+![S'MoRE hierarchical routing](images/smore_routing.png)
 
 
 ### Setup
