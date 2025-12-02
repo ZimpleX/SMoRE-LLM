@@ -26,22 +26,22 @@
 
 Contact: `zhqhku@gmail.com`
 
-### Overview
+## Overview
 
-#### How to make the best S'MoRE?
+### How to make the best S'MoRE?
 
 <img src="images/lora_moe_smore.png" alt="Comparison of PEFT adapter architectures: LoRA vs. MoE vs. S'MoRE" width="600"/>
 
-#### S'MoRE: layer propagation
+### S'MoRE: layer propagation
 
 <img src="images/smore_layer.png" alt="S'MoRE layer propagation" width="400"/>
 
-#### S'MoRE: hierarchical routing
+### S'MoRE: hierarchical routing
 
 <img src="images/smore_routing.png" alt="S'MoRE hierarchical routing" width="500"/>
 
 
-### Setup
+## Setup
 
 We integrate `S'MoRE` as an additional type of adapter in the [peft](https://github.com/huggingface/peft) library, and
 extend the [LLaMA-Factory](https://github.com/hiyouga/LLaMA-Factory) codebase to support SFT training of S'MoRE. 
@@ -67,7 +67,7 @@ Other preparations:
 * The dataset format follows exactly LLaMA-Factory. You can refer to their [README](https://github.com/hiyouga/LLaMA-Factory?tab=readme-ov-file#data-preparation) to prepare your own data. 
 
 
-### File structure
+## File structure
 
 `peft/`: customization of the HuggingFace peft library to support S'MoRE adapter
 * The base peft version is [0.14.1.dev0](https://github.com/ZimpleX/SMoRE-LLM/blob/main/peft/setup.py#L18). 
@@ -93,7 +93,7 @@ Other preparations:
 
 
 
-### Launch training
+## Launch training
 
 We put two example training config files under `LLaMA-Factory/examples` (one for LLaMA 3 and the other for Gemma 2). 
 
@@ -126,14 +126,14 @@ You can customize your own adapter or perform hyperparameter sweep by updating t
 You can adjust other parameters (e.g., batch size, gradient accumulation steps, etc) accordingly based on your machine configuration. All experiments in our paper were run on a node with 4 NVIDIA A100 GPUs. 
 
 
-### Evaluation
+## Evaluation
 
 After training, we use the [opencompass](https://github.com/open-compass/opencompass) pipeline to perform model evaluation via end-to-end generation. You need to locate the path for the model checkpoint (see [`sft_constants.py`](https://github.com/ZimpleX/SMoRE-LLM/blob/main/model_moe/src/model_moe/sft_constants.py) described above), and pass it to opencompass. 
 * For each benchmark, we reuse the prompt template in the official [opencompass](https://github.com/open-compass/opencompass) repo. 
 * This evaluation flow using opencompass is similar to other works, such as [HydraLoRA](https://github.com/Clin0212/HydraLoRA?tab=readme-ov-file#3-evaluate). 
 
 
-### BibTex
+## BibTex
 
 ```
 @inproceedings{
