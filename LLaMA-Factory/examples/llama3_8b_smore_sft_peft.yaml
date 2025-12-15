@@ -26,7 +26,7 @@ moe_gate_dims:
   - 32
 moe_dim_downproj_x: 32
 moe_gate_act_fn: relu
-moe_gate_type: switch
+moe_gate_type: switch # switch | dense | noisy_topk
 moe_gate_arch: mlp
 moe_expert_act_fn: tanh
 moe_target_modules:
