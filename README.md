@@ -52,6 +52,7 @@ To install SFT training environment, run the following:
 ```
 cd scripts/
 bash setup_train_env.sh
+conda activate smore_train
 ```
 
 The above setup script will
@@ -63,6 +64,8 @@ The above setup script will
 * Install 3 local packages in editable mode under `peft/`, `LLaMA-Factory/` and `model_moe/`
 
 Other preparations:
+* Log in HuggingFace so that it can download base model checkpoints. 
+  * Run `huggingface-cli login` from the command line. 
 * Log in W\&B to log the training curves to your own account. e.g., you can set `WANDB_API_KEY` to [your own key](https://wandb.ai/authorize). 
 * The dataset format follows exactly LLaMA-Factory. You can refer to their [README](https://github.com/hiyouga/LLaMA-Factory?tab=readme-ov-file#data-preparation) to prepare your own data. 
 

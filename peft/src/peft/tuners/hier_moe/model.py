@@ -108,17 +108,7 @@ class HieRMoEModel(BaseTuner):
         # dispatchers = []
         moe_arch = moe_config.moe_arch
         # NOTE currently just mimicing "dispatch_default"
-        if moe_arch == "llama_moe":
-            kwargs = {
-                "expert_dims": moe_config.expert_dims,
-                "num_experts": moe_config.num_experts,
-                "num_active": moe_config.num_active,
-                "gate_type": "TopKBalancedNoisyGate",
-                "calculator_type": "UniversalCalculator",
-                "layer_index": layer_index,
-            }
-            new_module = MoEFFN(target, adapter_name=adapter_name, **kwargs)
-        elif moe_arch == "smore":
+        if moe_arch == "smore":
             kwargs = {
                 "r": moe_config.expert_dims,
                 "s": moe_config.num_experts,
@@ -195,22 +185,6 @@ class HieRMoEModel(BaseTuner):
             if self.prefix not in n:
                 p.requires_grad = False
 
-        for active_adapter in self.active_adapters:
-            bias = self.peft_config[active_adapter].bias
-            if bias == "none":
-                continue
-
-            if bias == "all":
-                for n, p in model.named_parameters():
-                    if "bias" in n:
-                        p.requires_grad = True
-            elif bias == "moe_only":
-                for m in model.modules():
-                    if isinstance(m, MoEFFN) and hasattr(m, "bias") and m.bias is not None:
-                        m.bias.requires_grad = True
-            else:
-                raise NotImplementedError(f"Requested bias: {bias}, is not implemented.")
-
     def set_adapter(self, adapter_name: str | list[str]) -> None:
         """
         the same as lora/model.py:LoraModel
@@ -218,9 +192,6 @@ class HieRMoEModel(BaseTuner):
         This is called in BaseTuner: __init__() ==> inject_adapter().
         Seems this function is not needed if we just have 1 adapter. 
         """
-        for module in self.model.modules():
-            if isinstance(module, MoEFFN):
-                module.set_adapter(adapter_name)
         self.active_adapter = adapter_name
 
 

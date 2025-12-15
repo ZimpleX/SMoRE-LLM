@@ -144,16 +144,7 @@ def get_peft_model(
             )
         peft_config.revision = revision
 
-    if (
-        (isinstance(peft_config, PEFT_TYPE_TO_CONFIG_MAPPING["LORA"]))
-        and (peft_config.init_lora_weights == "eva")
-        and not low_cpu_mem_usage
-    ):
-        warnings.warn(
-            "lora with eva initialization used with low_cpu_mem_usage=False. "
-            "Setting low_cpu_mem_usage=True can improve the maximum batch size possible for eva initialization."
-        )
-
+    assert peft_config.peft_type == 'HIER_MOE', "Currently only support training with SMoRE adapter"
     prefix = PEFT_TYPE_TO_PREFIX_MAPPING.get(peft_config.peft_type)
     if prefix and adapter_name in prefix:
         warnings.warn(

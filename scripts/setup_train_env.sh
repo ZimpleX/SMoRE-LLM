@@ -6,20 +6,24 @@ TORCH_VERSION=2.7.0
 TORCH_CUDA_VERSION=cu128
 source ~/miniconda3/etc/profile.d/conda.sh
 source activate base
+# Ensure Anaconda channel Terms of Service are accepted non-interactively
+# (prevents `conda create` from failing in automated/scripted runs)
+conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/main || true
+conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/r || true
 conda activate $MY_ENV || conda create --name $MY_ENV python=$PYTHON_VERSION --yes
 conda activate $MY_ENV
-echo $CONDA_DEFAULT_ENV
-if [ "$CONDA_DEFAULT_ENV" != "$MY_ENV" ];
-then
-    echo "ERROR: Failed to create environment $MY_ENV"
-    exit
-fi
-echo $(which nvcc)
-if [ "$(which nvcc | grep /cuda-${CUDA_VERSION})" == "" ];
-then
-    echo "ERROR: NVCC for CUDA $CUDA_VERSION not found. You may need log into a GPU node first."
-    exit
-fi
+# echo $CONDA_DEFAULT_ENV
+# if [ "$CONDA_DEFAULT_ENV" != "$MY_ENV" ];
+# then
+#     echo "ERROR: Failed to create environment $MY_ENV"
+#     exit
+# fi
+# echo $(which nvcc)
+# if [ "$(which nvcc | grep /cuda-${CUDA_VERSION})" == "" ];
+# then
+#     echo "ERROR: NVCC for CUDA $CUDA_VERSION not found. You may need log into a GPU node first."
+#     exit
+# fi
 conda install --yes pip
 PIP_PATH=$(which pip)
 echo $PIP_PATH
